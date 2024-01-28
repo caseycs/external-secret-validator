@@ -41,28 +41,28 @@ type ExternalSecret struct {
 }
 
 func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
-	b := &bytes.Buffer{}
-	errors := 0
-
 	// Specify the context as background.
 	ctx := context.Background()
 
 	// aws sm client
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
-		return nil, errors, fmt.Errorf("Failed to load AWS configuration, %v", err)
+		return nil, 0, fmt.Errorf("Failed to load AWS configuration, %v", err)
 	}
 	client := secretsmanager.NewFromConfig(cfg)
 
 	var externalSecret ExternalSecret
 	err = yaml.Unmarshal(yml, &externalSecret)
 	if err != nil {
-		return nil,errors, fmt.Errorf("Error unmarshalling YAML: %v", err)
+		return nil, 0, fmt.Errorf("Error unmarshalling YAML: %v", err)
 	}
 
 	if len(externalSecret.Spec.Data) == 0 {
-		return nil,errors, fmt.Errorf("No externalSecret.Spec.Data found")
+		return nil, 0, fmt.Errorf("No externalSecret.Spec.Data found")
 	}
+
+	b := &bytes.Buffer{}
+	errors := 0
 
 	// loop over references found
 	for _, data := range externalSecret.Spec.Data {
@@ -78,7 +78,7 @@ func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
 		secretValue, err := getSecretValue(ctx, client, aws.ToString(secret.ARN))
 		if err != nil {
 			fmt.Fprintf(b, "Error getting secret value: %v\n", err)
-			continue;
+			continue
 		}
 
 		// secret key

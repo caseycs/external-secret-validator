@@ -14,8 +14,6 @@ func TestHandler(t *testing.T) {
 		expectedError       bool
 		expectedErrorsFound int
 		outputSubstrings    []string
-		// expectedBody  string
-		// expectedErrorsCount int
 	}{
 		{
 			name:                "Secrets found, keys found",
@@ -73,7 +71,4 @@ func TestHandler(t *testing.T) {
 			}
 		})
 	}
-
-	// output, errors, err := verifyExternalSecretYaml()
-	// pp.Print(string(output),errors)
 }
