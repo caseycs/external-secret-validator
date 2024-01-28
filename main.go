@@ -4,25 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func lambdaStart(ctx context.Context, event *events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
-	// http.HandleFunc("/", getRoot)
-	// log.Printf("Listening on 3333")
-	// err := http.ListenAndServe(":3333", nil)
-	// if err != nil {
-	// 	log.Fatalf("Failed to start http server, %v", err)
-	// }
-
-	// yml, err := os.ReadFile("config.yaml")
-	// if err != nil {
-	// 	log.Fatalf("Error reading YAML file: %v", err)
-	// }
-
 	// check for empty body
 	if event.Body == "" {
 		return events.LambdaFunctionURLResponse{
@@ -44,12 +31,15 @@ func lambdaStart(ctx context.Context, event *events.LambdaFunctionURLRequest) (e
 		yml = ymlFromBase64
 	}
 
-	log.Print(string(yml))
-	region := "us-east-1"
+	// parse region
+	region, regionFound := event.QueryStringParameters["region"]
+	if !regionFound {
+		region = "us-east-1"
+	}
 
 	log, errors, err := verifyExternalSecretYaml(yml, region)
 
-	// handle function result
+	// handle verification result
 	if err != nil {
 		return events.LambdaFunctionURLResponse{
 			Body:       err.Error(),
@@ -69,6 +59,5 @@ func lambdaStart(ctx context.Context, event *events.LambdaFunctionURLRequest) (e
 }
 
 func main() {
-	// Make the handler available for Remote Procedure Call by AWS Lambda
 	lambda.Start(lambdaStart)
 }
