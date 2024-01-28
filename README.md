@@ -5,8 +5,7 @@ AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS acco
 ## Usage
 
 ```bash
-helm template . | yq e '. | select(.kind == "ExternalSecret")' > ExternalSecret.yaml
-curl --fail-with-body -v --data-binary @ExternalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws\?region\=us-east-1
+helm template . | yq e '. | select(.kind == "ExternalSecret")' | curl --fail-with-body -v --data-binary @- https://xxx.lambda-url.us-east-1.on.aws\?region\=us-east-1
 ```
 
 ## Deploy
