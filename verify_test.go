@@ -12,15 +12,43 @@ func TestHandler(t *testing.T) {
 		name                string
 		filename            string
 		expectedError       bool
+		errorText           string
 		expectedErrorsFound int
 		outputSubstrings    []string
 	}{
+		{
+			name:                "Empty file",
+			filename:            "test/externalsecret/empty.yaml",
+			expectedError:       false,
+			expectedErrorsFound: 0,
+			outputSubstrings:    []string{"Empty YAML"},
+		},
+		{
+			name:                "Invalid yaml",
+			filename:            "test/externalsecret/invalid-yaml.yaml",
+			expectedError:       true,
+			errorText:           "Unexpected kind",
+			expectedErrorsFound: 0,
+		},
+		{
+			name:                "No data",
+			filename:            "test/externalsecret/no-data.yaml",
+			expectedError:       false,
+			expectedErrorsFound: 0,
+			outputSubstrings:    []string{"Empty .Spec.Data"},
+		},
+		{
+			name:                "Other kind",
+			filename:            "test/externalsecret/other-kind.yaml",
+			expectedError:       true,
+			errorText:           "Unexpected kind",
+			expectedErrorsFound: 0,
+		},
 		{
 			name:                "Secrets found, keys found",
 			filename:            "test/externalsecret/success.yaml",
 			expectedError:       false,
 			expectedErrorsFound: 0,
-			outputSubstrings:    []string{},
 		},
 		{
 			name:                "Secret not found",
@@ -36,18 +64,12 @@ func TestHandler(t *testing.T) {
 			expectedErrorsFound: 1,
 			outputSubstrings:    []string{"Secret key NOT found"},
 		},
-		{
-			name:                "Invalid yaml",
-			filename:            "test/externalsecret/invalid-yaml.yaml",
-			expectedError:       true,
-			expectedErrorsFound: 0,
-			outputSubstrings:    []string{},
-		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			yamlFile, err := os.ReadFile(testCase.filename)
+
 			if err != nil {
 				log.Fatalf("Error reading YAML file: %v", err)
 			}
@@ -56,8 +78,12 @@ func TestHandler(t *testing.T) {
 
 			if testCase.expectedError == false && err != nil {
 				t.Errorf("Expected no error, but got %v, output: %s", err, output)
-			} else if testCase.expectedError == true && err == nil {
-				t.Errorf("Expected error, but got none, output: %s", output)
+			} else if testCase.expectedError == true {
+				if err == nil {
+					t.Errorf("Expected error, but got none, output: %s", output)
+				} else if err.Error() != testCase.errorText {
+					t.Errorf("Expected error text: %s, but got %s", testCase.errorText, err.Error())
+				}
 			}
 
 			if errorsFound != testCase.expectedErrorsFound {

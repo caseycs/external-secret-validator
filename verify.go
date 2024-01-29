@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -41,7 +42,26 @@ type ExternalSecret struct {
 }
 
 func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
-	// Specify the context as background.
+	// basic checks
+	if strings.TrimSpace(string(yml)) == "" {
+		return  []byte("Empty YAML"), 0, nil
+	}
+
+	var externalSecret ExternalSecret
+	err := yaml.Unmarshal(yml, &externalSecret)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Error unmarshalling YAML: %v", err)
+	}
+
+	if externalSecret.Kind != "ExternalSecret" {
+		return nil, 0, fmt.Errorf("Unexpected kind")
+	}
+
+	if len(externalSecret.Spec.Data) == 0 {
+		return []byte("Empty .Spec.Data"), 0, nil
+	}
+
+	// check via aws api
 	ctx := context.Background()
 
 	// aws sm client
@@ -50,16 +70,6 @@ func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
 		return nil, 0, fmt.Errorf("Failed to load AWS configuration, %v", err)
 	}
 	client := secretsmanager.NewFromConfig(cfg)
-
-	var externalSecret ExternalSecret
-	err = yaml.Unmarshal(yml, &externalSecret)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Error unmarshalling YAML: %v", err)
-	}
-
-	if len(externalSecret.Spec.Data) == 0 {
-		return nil, 0, fmt.Errorf("No externalSecret.Spec.Data found")
-	}
 
 	b := &bytes.Buffer{}
 	errors := 0
