@@ -3,7 +3,7 @@ variable "function_name" {
 }
 
 variable "function_version" {
-  default = "v0.0.3"
+  default = "v0.0.5"
 }
 
 variable "policy_json" {
