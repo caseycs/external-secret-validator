@@ -2,6 +2,10 @@ variable "function_name" {
   default = "external-secret-validator"
 }
 
+variable "function_version" {
+  default = "v0.0.3"
+}
+
 variable "policy_json" {
   description = "IAM policy to access secrets"
   default     = <<END

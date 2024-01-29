@@ -2,13 +2,29 @@
 
 AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets mentioned exists, they have valid json structure and keys referenced are actually present.
 
-## Usage
+## Basic usage
 
 ```bash
 helm template . | yq e '. | select(.kind == "ExternalSecret")' | curl --fail-with-body -v --data-binary @- https://xxx.lambda-url.us-east-1.on.aws\?region\=us-east-1
 ```
 
-## Deploy
+## Install via Terragrunt
+
+```hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
+include "provider" {
+  path = find_in_parent_folders("provider-aws.hcl")
+}
+
+terraform {
+  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.3"
+}
+```
+
+## Build and update Lambda
 
 ```bash
 GOOS=linux GOARCH=amd64 go build -o main .

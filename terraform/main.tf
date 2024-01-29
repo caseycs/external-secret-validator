@@ -8,22 +8,33 @@ module "lambda_function" {
   runtime       = "go1.x"
 
   create_package = false
-  local_existing_package = "${path.module}/../lambda-handler.zip"
+  local_existing_package = data.null_data_source.downloaded_package.outputs["filename"]
 
   create_lambda_function_url = true
 
   attach_policy_jsons = true
   policy_jsons = [var.policy_json]
   number_of_policy_jsons = 1
-
-  depends_on = [
-    null_resource.this
-  ]
 }
 
-resource "null_resource" "this" {
+locals {
+  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/${var.function_version}/lambda-handler.zip"
+  downloaded  = "downloaded_package_${md5(local.package_url)}.zip"
+}
+
+resource "null_resource" "download_package" {
+  triggers = {
+    downloaded = local.downloaded
+  }
+
   provisioner "local-exec" {
-    working_dir = path.module
-    command = "GOOS=linux GOARCH=amd64 go build -o main ../; zip lambda-handler.zip main"
+    command = "curl -L -o ${local.downloaded} ${local.package_url}"
+  }
+}
+
+data "null_data_source" "downloaded_package" {
+  inputs = {
+    id       = null_resource.download_package.id
+    filename = local.downloaded
   }
 }
