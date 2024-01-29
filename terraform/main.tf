@@ -8,7 +8,7 @@ module "lambda_function" {
   runtime       = "go1.x"
 
   create_package = false
-  local_existing_package = "../lambda-handler.zip"
+  local_existing_package = "${path.module}/../lambda-handler.zip"
 
   create_lambda_function_url = true
 
