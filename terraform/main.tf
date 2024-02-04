@@ -18,7 +18,7 @@ module "lambda_function" {
 }
 
 locals {
-  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/${var.function_version}/lambda-handler.zip"
+  package_url = var.package_url
   downloaded  = "downloaded_package_${md5(local.package_url)}.zip"
 }
 

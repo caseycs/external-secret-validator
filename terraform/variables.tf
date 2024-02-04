@@ -1,12 +1,15 @@
 variable "function_name" {
+  type    = string
   default = "external-secret-validator"
 }
 
-variable "function_version" {
-  default = "v0.0.5"
+variable "package_url" {
+  type    = string
+  default = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.5/lambda-handler.zip"
 }
 
 variable "policy_json" {
+  type        = string
   description = "IAM policy to access secrets"
   default     = <<END
 {

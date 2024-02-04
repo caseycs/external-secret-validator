@@ -44,7 +44,7 @@ type ExternalSecret struct {
 func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
 	// basic checks
 	if strings.TrimSpace(string(yml)) == "" {
-		return  []byte("Empty YAML"), 0, nil
+		return  nil, 0, fmt.Errorf("Empty YAML")
 	}
 
 	var externalSecret ExternalSecret

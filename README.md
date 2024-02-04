@@ -1,11 +1,15 @@
 # External secret validator
 
-AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets mentioned exists, they have valid json structure and keys referenced are actually present.
+AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets exists, they json structure is valid and contains referenced keys.
+
+Useful to validate Helm charts or K8S definitions before deployment, to catch typos, missing keys or secrets earlier and explain the issue in human-readable way.
+
+It seems way easier to make make CI perform these checks, but that will mean granting workflow access to read secret values, which is barely acceptable for production deployments.
 
 ## Basic usage
 
 ```bash
-helm template . | yq e '. | select(.kind == "ExternalSecret")' | curl --fail-with-body -v --data-binary @- https://xxx.lambda-url.us-east-1.on.aws\?region\=us-east-1
+helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecrets.yaml | curl --fail-with-body --data-binary @- https://xxx.lambda-url.us-east-1.on.aws
 ```
 
 ## Install via Terragrunt
@@ -20,7 +24,14 @@ include "provider" {
 }
 
 terraform {
-  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.3"
+  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.5"
+}
+
+# Could be ommited, but you probably do not want to use external package
+# that will access to your aws secrets on prod, so makeing a private fork
+# of the repo and redefining package_url sounds like a good idea
+inputs = {
+  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.5/lambda-handler.zip"
 }
 ```
 

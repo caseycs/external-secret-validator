@@ -13,8 +13,8 @@ func lambdaStart(ctx context.Context, event *events.LambdaFunctionURLRequest) (e
 	// check for empty body
 	if event.Body == "" {
 		return events.LambdaFunctionURLResponse{
-			Body:       "Non-empty request body expected",
-			StatusCode: 400,
+			Body:       "Empty request body, probably there were no ExternalSecret definitions found",
+			StatusCode: 200,
 		}, nil
 	}
 
