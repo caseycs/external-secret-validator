@@ -29,7 +29,7 @@ terraform {
 }
 
 # Could be ommited, but you probably do not want to use external package
-# that will access to your aws secrets on prod, so makeing a private fork
+# that will access to your aws secrets on prod, so making a private fork
 # of the repo and redefining package_url sounds like a good idea
 inputs = {
   package_url = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.5/lambda-handler.zip"
