@@ -10,7 +10,15 @@ It seems way easier to make make CI perform these checks, but that will mean gra
 
 ```bash
 helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecret.yaml
-if [ -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
+if [ ! -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
+```
+
+Example output:
+
+```
+Secret found: project-staging-app-redis
+Secret key NOT found: project-staging-app-redis/redis_addresses: key not found
+curl: (22) The requested URL returned error: 400
 ```
 
 ## Install via Terragrunt
