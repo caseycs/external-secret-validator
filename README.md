@@ -9,7 +9,8 @@ It seems way easier to make make CI perform these checks, but that will mean gra
 ## Basic usage
 
 ```bash
-helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecrets.yaml | curl --fail-with-body --data-binary @- https://xxx.lambda-url.us-east-1.on.aws
+helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecret.yaml
+if [ -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
 ```
 
 ## Install via Terragrunt
