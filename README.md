@@ -36,11 +36,30 @@ terraform {
   source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.6"
 }
 
-# Could be ommited, but you probably do not want to use external package
-# that will access to your aws secrets on prod, so making a private fork
-# of the repo and redefining package_url sounds like a good idea
+# default values, could be adjusted or ommited
 inputs = {
-  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.6/lambda-handler.zip"
+  function_name = "external-secret-validator"
+  policy_json = <<END
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetRandomPassword",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+                "secretsmanager:ListSecrets",
+                "secretsmanager:BatchGetSecretValue"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+  END
 }
 ```
 
