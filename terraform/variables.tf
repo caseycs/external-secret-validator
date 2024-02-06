@@ -5,7 +5,7 @@ variable "function_name" {
 
 variable "package_url" {
   type    = string
-  default = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.5/lambda-handler.zip"
+  default = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.6/lambda-handler.zip"
 }
 
 variable "policy_json" {

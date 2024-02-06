@@ -10,7 +10,7 @@ It seems way easier to make make CI perform these checks, but that will mean gra
 
 ```bash
 helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecret.yaml
-if [ ! -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
+if [ -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
 ```
 
 Example output:
@@ -33,14 +33,14 @@ include "provider" {
 }
 
 terraform {
-  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.5"
+  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.6"
 }
 
 # Could be ommited, but you probably do not want to use external package
 # that will access to your aws secrets on prod, so making a private fork
 # of the repo and redefining package_url sounds like a good idea
 inputs = {
-  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.5/lambda-handler.zip"
+  package_url = "https://github.com/caseycs/external-secret-validator/releases/download/v0.0.6/lambda-handler.zip"
 }
 ```
 
