@@ -33,7 +33,7 @@ include "provider" {
 }
 
 terraform {
-  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.6"
+  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.7"
 }
 
 # default values, could be adjusted or ommited
