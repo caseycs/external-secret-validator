@@ -63,7 +63,7 @@ inputs = {
 }
 ```
 
-## Build and update Lambda
+## Build and update existing Lambda manually
 
 ```bash
 GOOS=linux GOARCH=amd64 go build -o main .
