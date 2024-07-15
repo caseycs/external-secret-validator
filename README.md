@@ -1,6 +1,6 @@
 # External secret validator
 
-AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets exists, they json structure is valid and contains referenced keys.
+AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets exists, their json structure is valid and contains referenced keys.
 
 Useful to validate Helm charts or K8S definitions before deployment, to catch typos, missing keys or secrets earlier and explain the issue in human-readable way.
 
