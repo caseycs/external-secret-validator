@@ -66,6 +66,25 @@ inputs = {
 }
 ```
 
+### IAM policy for CI role/user
+
+In order CI will be able to get function url by name you need to add the following policy to it's IAM role/user:
+
+```json
+{
+  "Statement": [
+      {
+          "Action": [
+              "lambda:GetFunctionUrlConfig"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:lambda:us-east-1:xxx:function:external-secret-validator",
+          "Sid": "ExternalSecretValidator"
+      }
+  ]
+}
+```
+
 ## Build and update existing Lambda manually
 
 ```bash
