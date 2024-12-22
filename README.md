@@ -9,19 +9,22 @@ It seems way easier to make make CI perform these checks, but that will mean gra
 ## Basic usage
 
 ```bash
+URL=$(aws lambda get-function-url-config --region us-east-1 --function-name external-secret-validator --query 'FunctionUrl' --output text)
+echo "External secrets validator url: $URL"
 helm template -f values.yaml . | yq '. | select(.kind == "ExternalSecret")' | tee externalSecret.yaml
-if [ -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml https://xxx.lambda-url.us-east-1.on.aws; fi
+if [ -s "externalSecret.yaml" ] ; then curl --fail-with-body --data-binary @externalSecret.yaml $URL?region=us-east-1; fi
 ```
 
 Example output:
 
 ```
+External secrets validator url: https://xxx.lambda-url.us-east-1.on.aws
 Secret found: project-staging-app-redis
 Secret key NOT found: project-staging-app-redis/redis_addresses: key not found
 curl: (22) The requested URL returned error: 400
 ```
 
-## Install via Terragrunt
+## Installation using Terragrunt
 
 ```hcl
 include "root" {
