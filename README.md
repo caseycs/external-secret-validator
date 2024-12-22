@@ -19,8 +19,10 @@ Example output:
 
 ```
 External secrets validator url: https://xxx.lambda-url.us-east-1.on.aws
-Secret found: project-staging-app-redis
-Secret key NOT found: project-staging-app-redis/redis_addresses: key not found
+Secret found: project-staging-app1-database
+Secret key found: project-staging-app1-database/postgres_dsn
+Secret found: project-staging-app1-redis
+Secret key NOT found: project-staging-app1-redis/redis_dsn: key not found
 curl: (22) The requested URL returned error: 400
 ```
 
