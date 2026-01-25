@@ -1,5 +1,8 @@
 # External secret validator
 
+[![Test](https://github.com/caseycs/external-secret-validator/actions/workflows/test.yml/badge.svg)](https://github.com/caseycs/external-secret-validator/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/caseycs/external-secret-validator/branch/main/graph/badge.svg)](https://codecov.io/gh/caseycs/external-secret-validator)
+
 AWS Lambda function to check K8S `ExternalSecret` definitions VS actual AWS account: ensure that secrets exists, their json structure is valid and contains referenced keys.
 
 Useful to validate Helm charts or K8S definitions before deployment, to catch typos, missing keys or secrets earlier and explain the issue in human-readable way.
@@ -38,7 +41,7 @@ include "provider" {
 }
 
 terraform {
-  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.7"
+  source = "git@github.com:caseycs/external-secret-validator.git//terraform?ref=v0.0.8"
 }
 
 # default values, could be adjusted or ommited
