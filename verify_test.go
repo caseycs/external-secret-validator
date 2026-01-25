@@ -1,13 +1,78 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
+// mockSecretsManagerClient is a mock implementation of SecretsManagerAPI for testing.
+type mockSecretsManagerClient struct {
+	secrets map[string]string // map of secret name to secret JSON value
+}
+
+func (m *mockSecretsManagerClient) ListSecrets(ctx context.Context, params *secretsmanager.ListSecretsInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.ListSecretsOutput, error) {
+	var secretList []types.SecretListEntry
+
+	// Find secrets matching the filter
+	for _, filter := range params.Filters {
+		if filter.Key == "name" {
+			for _, filterValue := range filter.Values {
+				if _, exists := m.secrets[filterValue]; exists {
+					secretList = append(secretList, types.SecretListEntry{
+						Name: aws.String(filterValue),
+						ARN:  aws.String(fmt.Sprintf("arn:aws:secretsmanager:us-east-1:123456789012:secret:%s", filterValue)),
+					})
+				}
+			}
+		}
+	}
+
+	return &secretsmanager.ListSecretsOutput{
+		SecretList: secretList,
+	}, nil
+}
+
+func (m *mockSecretsManagerClient) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
+	secretID := aws.ToString(params.SecretId)
+
+	// Extract secret name from ARN if needed
+	secretName := secretID
+	if strings.HasPrefix(secretID, "arn:aws:secretsmanager:") {
+		parts := strings.Split(secretID, ":")
+		if len(parts) >= 7 {
+			secretName = parts[6]
+		}
+	}
+
+	if value, exists := m.secrets[secretName]; exists {
+		return &secretsmanager.GetSecretValueOutput{
+			SecretString: aws.String(value),
+		}, nil
+	}
+
+	return nil, fmt.Errorf("secret not found: %s", secretName)
+}
+
+// newMockClient creates a mock client with test data.
+func newMockClient() *mockSecretsManagerClient {
+	return &mockSecretsManagerClient{
+		secrets: map[string]string{
+			"external_secret_validator_test": `{"int_key": 123, "string_key": "test_value"}`,
+		},
+	}
+}
+
 func TestVerifyExternalSecretSuccess(t *testing.T) {
+	mockClient := newMockClient()
+
 	testCases := []struct {
 		name             string
 		filename         string
@@ -46,7 +111,7 @@ func TestVerifyExternalSecretSuccess(t *testing.T) {
 				log.Fatalf("Error reading YAML file: %v", err)
 			}
 
-			output, errorsFound, err := verifyExternalSecretYaml(yamlFile, "us-east-1")
+			output, errorsFound, err := verifyExternalSecretYamlWithClient(yamlFile, mockClient)
 
 			if err != nil {
 				t.Errorf("Expected no error, but got %v, output: %s", err, output)
@@ -66,6 +131,8 @@ func TestVerifyExternalSecretSuccess(t *testing.T) {
 }
 
 func TestVerifyExternalSecretError(t *testing.T) {
+	mockClient := newMockClient()
+
 	testCases := []struct {
 		name      string
 		filename  string
@@ -96,7 +163,7 @@ func TestVerifyExternalSecretError(t *testing.T) {
 				log.Fatalf("Error reading YAML file: %v", err)
 			}
 
-			_, _, err = verifyExternalSecretYaml(yamlFile, "us-east-1")
+			_, _, err = verifyExternalSecretYamlWithClient(yamlFile, mockClient)
 
 			if err == nil {
 				t.Errorf("Expected error, but got none")

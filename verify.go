@@ -15,6 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
 
+// SecretsManagerAPI defines the interface for Secrets Manager operations used by this package.
+// This allows for mocking in tests.
+type SecretsManagerAPI interface {
+	ListSecrets(ctx context.Context, params *secretsmanager.ListSecretsInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.ListSecretsOutput, error)
+	GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
+}
+
+// newSecretsManagerClient creates a new Secrets Manager client for the given region.
+func newSecretsManagerClient(region string) (SecretsManagerAPI, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to load AWS configuration, %v", err)
+	}
+	return secretsmanager.NewFromConfig(cfg), nil
+}
+
 type ExternalSecret struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
@@ -42,9 +58,17 @@ type ExternalSecret struct {
 }
 
 func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
+	client, err := newSecretsManagerClient(region)
+	if err != nil {
+		return nil, 0, err
+	}
+	return verifyExternalSecretYamlWithClient(yml, client)
+}
+
+func verifyExternalSecretYamlWithClient(yml []byte, client SecretsManagerAPI) ([]byte, int, error) {
 	// basic checks
 	if strings.TrimSpace(string(yml)) == "" {
-		return  nil, 0, fmt.Errorf("Empty YAML")
+		return nil, 0, fmt.Errorf("Empty YAML")
 	}
 
 	var externalSecret ExternalSecret
@@ -63,13 +87,6 @@ func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
 
 	// check via aws api
 	ctx := context.Background()
-
-	// aws sm client
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to load AWS configuration, %v", err)
-	}
-	client := secretsmanager.NewFromConfig(cfg)
 
 	b := &bytes.Buffer{}
 	errors := 0
@@ -104,7 +121,7 @@ func verifyExternalSecretYaml(yml []byte, region string) ([]byte, int, error) {
 	return b.Bytes(), errors, nil
 }
 
-func findSecretByName(ctx context.Context, client *secretsmanager.Client, secretName string) (*types.SecretListEntry, error) {
+func findSecretByName(ctx context.Context, client SecretsManagerAPI, secretName string) (*types.SecretListEntry, error) {
 	// Create an input for ListSecrets.
 	input := &secretsmanager.ListSecretsInput{
 		Filters: []types.Filter{
@@ -131,7 +148,7 @@ func findSecretByName(ctx context.Context, client *secretsmanager.Client, secret
 	return nil, fmt.Errorf("secret with name '%s' not found", secretName)
 }
 
-func getSecretValue(ctx context.Context, client *secretsmanager.Client, secretID string) (string, error) {
+func getSecretValue(ctx context.Context, client SecretsManagerAPI, secretID string) (string, error) {
 	// Create an input for GetSecretValue.
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretID),
